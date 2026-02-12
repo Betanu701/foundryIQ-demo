@@ -1,5 +1,7 @@
 # AI FoundryIQ Demo
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Betanu701/foundryIQ-demo)
+
 A Python-based AI demo project that ingests business documents into Azure AI Search with vector embeddings and provides natural language querying via GPT-4.1.
 
 ## Features
@@ -8,24 +10,111 @@ A Python-based AI demo project that ingests business documents into Azure AI Sea
 - **Vector Search**: Uses Azure OpenAI embeddings for semantic search
 - **Natural Language Queries**: Chat with your documents using GPT-4.1
 - **React Frontend**: Simple chat interface to ask questions
+- **Multi-Agent Support**: Orchestrated agents for complex queries
 
-## Prerequisites
+---
+
+## 🚀 Deployment Options
+
+Choose the deployment method that works best for you:
+
+| Method | Best For | Time | Prerequisites |
+|--------|----------|------|---------------|
+| [**GitHub Codespaces**](#option-1-github-codespaces-easiest) | Quick demos, no local setup | 10 min | Azure subscription |
+| [**Interactive Wizard**](#option-2-interactive-setup-wizard) | Guided local setup | 15 min | Python 3.10+, Azure CLI |
+| [**Manual Setup**](#option-3-manual-setup) | Full control, learning | 20 min | Python 3.10+, Node.js 18+ |
+
+---
+
+## Option 1: GitHub Codespaces (Easiest)
+
+**No local installation required.** Run everything in the browser.
+
+### Quick Start
+
+1. Click the badge above or go to: [Open in Codespaces](https://codespaces.new/Betanu701/foundryIQ-demo)
+2. Wait for the container to build (~2 minutes)
+3. Open `deploy_foundryiq.ipynb` in the Codespaces editor
+4. Run each cell in order (Shift+Enter)
+
+The notebook will:
+- Log you into Azure (device code flow)
+- Discover your Azure AI resources
+- Create the search index
+- Process and index your documents
+- Test the system with sample queries
+
+📖 **Detailed Guide:** See [docs/Generic_Getting_Started.md](docs/Generic_Getting_Started.md)
+
+---
+
+## Option 2: Interactive Setup Wizard
+
+**Guided setup** with prompts for each step.
+
+```bash
+# Clone the repository
+git clone https://github.com/Betanu701/foundryIQ-demo.git
+cd foundryIQ-demo
+
+# Run the interactive wizard
+python3 docs/setup_wizard.py
+```
+
+**Wizard features:**
+- Collects your company information upfront
+- Presents each prompt one at a time
+- Handles manual steps with clear instructions
+- Lets you skip optional steps
+- Tracks progress and allows resuming
+
+```bash
+# Options
+python3 docs/setup_wizard.py --list-steps      # List all steps
+python3 docs/setup_wizard.py --resume 5        # Resume from step 5
+```
+
+📖 **Detailed Guide:** See [docs/Generic_Getting_Started.md](docs/Generic_Getting_Started.md)
+
+---
+
+## Option 3: Manual Setup
+
+**Full control** over each step.
+
+### Prerequisites
 
 - Python 3.10+
 - Node.js 18+ (for frontend)
-- Azure AI Foundry account (Flinstones)
-- Azure AI Search service (stone-fabrix-agent-connector)
+- Azure subscription with:
+  - Azure AI Services (OpenAI)
+  - Azure AI Search
 
-## Setup
-
-### 1. Configure Environment Variables
+### Step 1: Clone and Configure
 
 ```bash
+git clone https://github.com/Betanu701/foundryIQ-demo.git
+cd foundryIQ-demo
+
+# Copy environment template
 cp .env.example .env
-# Edit .env with your Azure credentials
 ```
 
-Required environment variables:
+### Step 2: Get Azure Credentials
+
+```bash
+# Login to Azure
+az login
+
+# Get your AI Services endpoint and key
+az cognitiveservices account show --name YOUR_AI_SERVICE --resource-group YOUR_RG --query properties.endpoint
+az cognitiveservices account keys list --name YOUR_AI_SERVICE --resource-group YOUR_RG
+
+# Get your Search service endpoint and key
+az search admin-key show --service-name YOUR_SEARCH --resource-group YOUR_RG
+```
+
+Edit `.env` with your credentials:
 - `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint
 - `AZURE_OPENAI_API_KEY` - Your Azure OpenAI API key
 - `AZURE_OPENAI_DEPLOYMENT` - GPT-4.1 deployment name
@@ -33,35 +122,50 @@ Required environment variables:
 - `AZURE_SEARCH_ENDPOINT` - Azure AI Search endpoint
 - `AZURE_SEARCH_API_KEY` - Azure AI Search API key
 
-### 2. Install Python Dependencies
+### Step 3: Install Dependencies and Ingest
 
 ```bash
 pip install -r requirements.txt
-```
-
-### 3. Ingest Documents
-
-Run the ingestion script to process all files and upload to Azure AI Search:
-
-```bash
 python3 -m src.ingest
 ```
 
-### 4. Start the API Server
+### Step 4: Run the Application
 
 ```bash
+# Terminal 1: Start API server
 uvicorn src.api:app --reload --port 8000
-```
 
-### 5. Start the React Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
+# Terminal 2: Start frontend
+cd frontend && npm install && npm run dev
 ```
 
 Open http://localhost:5173 in your browser.
+
+📖 **Detailed Guide:** See [docs/Generic_Getting_Started.md](docs/Generic_Getting_Started.md)
+
+---
+
+## 🎯 Running a Demo
+
+See **[docs/Demo_Script.md](docs/Demo_Script.md)** for a complete walkthrough of how to demo this application, including:
+- Setup checklist
+- Talking points
+- Sample queries to showcase
+- Tips for audience engagement
+
+---
+
+## 🧹 Cleanup
+
+When finished, clean up Azure resources:
+
+```bash
+python3 docs/teardown.py
+```
+
+See [docs/Teardown_Instructions.md](docs/Teardown_Instructions.md) for detailed cleanup steps.
+
+---
 
 ## Project Structure
 
@@ -76,31 +180,27 @@ foundryIQ-demo/
 │   ├── embeddings.py          # Azure OpenAI embeddings
 │   └── ingest.py              # Document ingestion script
 ├── frontend/
-│   ├── src/
-│   │   ├── App.jsx            # React chat component
-│   │   ├── index.css          # Styles
-│   │   └── main.jsx           # Entry point
-│   ├── index.html
-│   └── package.json
+│   └── src/App.jsx            # React chat component
+├── docs/
+│   ├── Generic_Getting_Started.md  # Detailed setup guide
+│   ├── Demo_Script.md              # Demo walkthrough
+│   └── Teardown_Instructions.md    # Cleanup guide
 ├── files/                     # Source documents to ingest
-├── .env.example
-├── requirements.txt
-└── README.md
+├── deploy_foundryiq.ipynb     # Codespaces deployment notebook
+└── Agent_Instructions.md      # Azure AI Foundry agent setup
 ```
 
-## Indexed Document Types
+---
 
-The system ingests and indexes:
-- Customer Master data
-- Product Catalog
-- Tax Jurisdictions and Transactions
-- Compliance Filing Calendar
-- Exemption Certificates
-- Support Cases
-- Revenue Recognition
-- Internal Audit Findings
-- Product Roadmap
-- And 40+ more document types...
+## Creating an Azure AI Foundry Agent
+
+Want to use this as a grounded agent in Azure AI Foundry? See **[Agent_Instructions.md](Agent_Instructions.md)** for:
+- System prompt to copy/paste
+- Grounding configuration
+- Sample queries to test
+- Demo tips
+
+---
 
 ## API Endpoints
 
@@ -114,3 +214,9 @@ curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"question": "What products are in the catalog?"}'
 ```
+
+---
+
+## License
+
+MIT
