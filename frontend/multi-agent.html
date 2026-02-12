@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoundryIQ Multi-Agent Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar - Scenarios */
+        .sidebar {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scenario-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: #7c3aed;
+            transform: translateX(5px);
+        }
+
+        .scenario-card.active {
+            background: rgba(124, 58, 237, 0.3);
+            border-color: #7c3aed;
+        }
+
+        .scenario-card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .scenario-card p {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            line-height: 1.4;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Agent Architecture Visualization */
+        .architecture-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .architecture-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #a0a0a0;
+        }
+
+        .agents-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .agent-node {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s;
+        }
+
+        .agent-node.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            animation: pulse 1.5s infinite;
+        }
+
+        .agent-node.completed {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+        }
+
+        .agent-node .icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .agent-node .name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
+            50% { box-shadow: 0 0 20px 10px rgba(0, 212, 255, 0); }
+        }
+
+        /* Workflow Panel */
+        .workflow-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .workflow-header h2 {
+            font-size: 1rem;
+            color: #a0a0a0;
+        }
+
+        .run-btn {
+            background: linear-gradient(90deg, #7c3aed, #00d4ff);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .run-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .run-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Conversation Log */
+        .conversation-log {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+
+        .log-entry.orchestrator { border-color: #f59e0b; }
+        .log-entry.triage { border-color: #ef4444; }
+        .log-entry.research { border-color: #3b82f6; }
+        .log-entry.compliance { border-color: #10b981; }
+        .log-entry.review { border-color: #8b5cf6; }
+        .log-entry.output { border-color: #00d4ff; }
+
+        .log-entry .agent-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .log-entry .instruction {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .log-entry .response {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* Final Output */
+        .final-output {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .final-output h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .final-output .content {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .stat .label {
+            font-size: 0.75rem;
+            color: #a0a0a0;
+            text-transform: uppercase;
+        }
+
+        .stat .value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 40px;
+            color: #a0a0a0;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom input */
+        .custom-input {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .custom-input textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .custom-input textarea:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .custom-input button {
+            margin-top: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 FoundryIQ Multi-Agent System</h1>
+            <p>Watch multiple AI agents collaborate in real-time to solve complex business problems</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2>📋 Demo Scenarios</h2>
+                
+                <div class="scenario-card" data-scenario="incident">
+                    <h3>🚨 Critical Incident Response</h3>
+                    <p>Multi-agent coordination for a system outage affecting customers</p>
+                </div>
+                
+                <div class="scenario-card" data-scenario="customer_qbr">
+                    <h3>📊 Customer QBR Preparation</h3>
+                    <p>Comprehensive customer health analysis for quarterly review</p>
+                </div>
+                
+                <div class="scenario-card" data-scenario="audit_prep">
+                    <h3>🔐 SOC 2 Audit Preparation</h3>
+                    <p>Security controls assessment and gap analysis</p>
+                </div>
+                
+                <div class="scenario-card" data-scenario="compliance_review">
+                    <h3>📅 End of Quarter Compliance</h3>
+                    <p>Tax filings, certificates, and deadline tracking</p>
+                </div>
+                
+                <div class="scenario-card" data-scenario="risk_assessment">
+                    <h3>⚠️ Enterprise Risk Assessment</h3>
+                    <p>Cross-domain risk analysis for board reporting</p>
+                </div>
+                
+                <div class="scenario-card" data-scenario="revenue_analysis">
+                    <h3>💰 Revenue & Product Strategy</h3>
+                    <p>Product performance and churn risk analysis</p>
+                </div>
+
+                <div class="custom-input">
+                    <textarea id="customRequest" placeholder="Or enter your own request..."></textarea>
+                    <button class="run-btn" onclick="runCustom()">Run Custom Request</button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Agent Architecture -->
+                <div class="architecture-panel">
+                    <h2>🔄 Agent Workflow</h2>
+                    <div class="agents-grid">
+                        <div class="agent-node" id="agent-orchestrator">
+                            <div class="icon">🎯</div>
+                            <div class="name">Orchestrator</div>
+                        </div>
+                        <div class="agent-node" id="agent-triage">
+                            <div class="icon">🏷️</div>
+                            <div class="name">Triage</div>
+                        </div>
+                        <div class="agent-node" id="agent-research">
+                            <div class="icon">🔍</div>
+                            <div class="name">Research</div>
+                        </div>
+                        <div class="agent-node" id="agent-compliance">
+                            <div class="icon">✅</div>
+                            <div class="name">Compliance</div>
+                        </div>
+                        <div class="agent-node" id="agent-review">
+                            <div class="icon">📝</div>
+                            <div class="name">Review</div>
+                        </div>
+                        <div class="agent-node" id="agent-output">
+                            <div class="icon">📤</div>
+                            <div class="name">Output</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Panel -->
+                <div class="workflow-panel">
+                    <div class="workflow-header">
+                        <h2>💬 Agent Conversation</h2>
+                        <button class="run-btn" id="runBtn" onclick="runSelected()">▶️ Run Workflow</button>
+                    </div>
+
+                    <div class="conversation-log" id="conversationLog">
+                        <div class="loading" id="loadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <span>Agents are collaborating...</span>
+                        </div>
+                        <div id="logEntries">
+                            <p style="text-align: center; color: #666; padding: 40px;">
+                                Select a scenario and click "Run Workflow" to start
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="final-output" id="finalOutput" style="display: none;">
+                        <h3>📋 Final Output</h3>
+                        <div class="content" id="finalContent"></div>
+                    </div>
+
+                    <div class="stats-bar" id="statsBar" style="display: none;">
+                        <div class="stat">
+                            <div class="label">Iterations</div>
+                            <div class="value" id="statIterations">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="label">Steps Executed</div>
+                            <div class="value" id="statSteps">0</div>
+                        </div>
+                        <div class="stat">
+                            <div class="label">Agents Used</div>
+                            <div class="value" id="statAgents">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8001';
+        let selectedScenario = null;
+
+        // Scenario click handlers
+        document.querySelectorAll('.scenario-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                selectedScenario = card.dataset.scenario;
+            });
+        });
+
+        function resetAgentNodes() {
+            document.querySelectorAll('.agent-node').forEach(node => {
+                node.classList.remove('active', 'completed');
+            });
+        }
+
+        function activateAgent(agentName) {
+            resetAgentNodes();
+            const node = document.getElementById(`agent-${agentName.toLowerCase()}`);
+            if (node) {
+                node.classList.add('active');
+            }
+        }
+
+        function completeAgent(agentName) {
+            const node = document.getElementById(`agent-${agentName.toLowerCase()}`);
+            if (node) {
+                node.classList.remove('active');
+                node.classList.add('completed');
+            }
+        }
+
+        function addLogEntry(agent, instruction, response) {
+            const logEntries = document.getElementById('logEntries');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${agent.toLowerCase()}`;
+            entry.innerHTML = `
+                <div class="agent-name">${agent}</div>
+                <div class="instruction">📌 ${instruction}</div>
+                <div class="response">${response}</div>
+            `;
+            logEntries.appendChild(entry);
+            
+            // Scroll to bottom
+            const log = document.getElementById('conversationLog');
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function runWorkflow(request, scenarioKey = null) {
+            // Reset UI
+            document.getElementById('logEntries').innerHTML = '';
+            document.getElementById('finalOutput').style.display = 'none';
+            document.getElementById('statsBar').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('runBtn').disabled = true;
+            resetAgentNodes();
+
+            try {
+                const url = scenarioKey 
+                    ? `${API_URL}/workflow/${scenarioKey}`
+                    : `${API_URL}/workflow`;
+                
+                const options = scenarioKey
+                    ? { method: 'POST' }
+                    : { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ request })
+                    };
+
+                activateAgent('orchestrator');
+                
+                const response = await fetch(url, options);
+                const data = await response.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                // Process conversation history
+                for (const entry of data.conversation_history) {
+                    activateAgent(entry.agent);
+                    await new Promise(r => setTimeout(r, 300)); // Visual delay
+                    
+                    const response = entry.result.raw_response || 
+                                   JSON.stringify(entry.result.parsed, null, 2) ||
+                                   'No response';
+                    
+                    addLogEntry(
+                        entry.agent,
+                        entry.instruction,
+                        response.substring(0, 500) + (response.length > 500 ? '...' : '')
+                    );
+                    
+                    completeAgent(entry.agent);
+                }
+
+                // Show final output
+                if (data.final_output) {
+                    document.getElementById('finalOutput').style.display = 'block';
+                    document.getElementById('finalContent').textContent = data.final_output;
+                }
+
+                // Show stats
+                document.getElementById('statsBar').style.display = 'flex';
+                document.getElementById('statIterations').textContent = data.iterations;
+                document.getElementById('statSteps').textContent = data.steps_executed;
+                document.getElementById('statAgents').textContent = data.agents_involved.length;
+
+            } catch (error) {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('logEntries').innerHTML = `
+                    <p style="color: #ef4444; padding: 20px;">
+                        ❌ Error: ${error.message}<br><br>
+                        Make sure the API is running: python -m src.multi_agent.api
+                    </p>
+                `;
+            }
+
+            document.getElementById('runBtn').disabled = false;
+        }
+
+        function runSelected() {
+            if (!selectedScenario) {
+                alert('Please select a scenario first');
+                return;
+            }
+            runWorkflow(null, selectedScenario);
+        }
+
+        function runCustom() {
+            const request = document.getElementById('customRequest').value.trim();
+            if (!request) {
+                alert('Please enter a request');
+                return;
+            }
+            runWorkflow(request);
+        }
+    </script>
+</body>
+</html>
