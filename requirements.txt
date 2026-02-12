@@ -21,3 +21,6 @@ python-multipart>=0.0.6
 
 # CORS for React frontend
 aiofiles>=23.2.0
+
+# Jupyter notebook support
+ipykernel>=6.29.0
