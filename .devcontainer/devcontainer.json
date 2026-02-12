@@ -12,6 +12,8 @@
       "extensions": [
         "ms-python.python",
         "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.jupyter-keymap",
         "ms-azuretools.vscode-azurefunctions",
         "ms-vscode.azure-account"
       ],
